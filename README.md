@@ -23,7 +23,7 @@ Bem-vindo ao repositório de um sistema distribuído para reservas de salas, bas
 
 2. **Clone o repositório e acesse a pasta:**
     ```bash
-    git clone https://github.com/SeuUsuario/SeuRepositorio.git
+    git clone https://github.com/VitorParente/Reserva_Sala_Microsservices.git
     cd Reserva_Sala_Microsservices
     ```
 
