@@ -1,0 +1,150 @@
+version: "3.8"
+
+services:
+
+  # Serviço de autenticação de usuários
+  usuarioapp:
+    build: user
+    ports:
+      - "8081:8081"
+    depends_on:
+      - banco_usuario
+      - fila_mensagens
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://banco_usuario:5432/usersdb
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: admin
+    networks:
+      - rede_usuario
+      - rede_mensageria
+      - rede_gateway
+
+  banco_usuario:
+    image: postgres:15
+    container_name: banco_usuario
+    restart: always
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: usersdb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin
+    networks:
+      - rede_usuario
+    volumes:
+      - dados_usuario:/var/lib/postgresql/data
+
+  # Serviço de gerenciamento de salas
+  ambienteapp:
+    build: sala
+    ports:
+      - "8082:8082"
+    depends_on:
+      - banco_sala
+      - fila_mensagens
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://banco_sala:5432/salasdb
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: admin
+    networks:
+      - rede_sala
+      - rede_mensageria
+      - rede_gateway
+
+  banco_sala:
+    image: postgres:15
+    container_name: banco_sala
+    restart: always
+    ports:
+      - "5434:5432"
+    environment:
+      POSTGRES_DB: salasdb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin
+    networks:
+      - rede_sala
+    volumes:
+      - dados_sala:/var/lib/postgresql/data
+
+  # Serviço de reservas
+  agendamentoapp:
+    build: reserva
+    ports:
+      - "8083:8083"
+    depends_on:
+      - banco_reserva
+      - fila_mensagens
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://banco_reserva:5432/reservasdb
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: admin
+    networks:
+      - rede_reserva
+      - rede_mensageria
+      - rede_gateway
+
+  banco_reserva:
+    image: postgres:15
+    container_name: banco_reserva
+    restart: always
+    ports:
+      - "5435:5432"
+    environment:
+      POSTGRES_DB: reservasdb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin
+    networks:
+      - rede_reserva
+    volumes:
+      - dados_reserva:/var/lib/postgresql/data
+
+  # API Gateway
+  apigateway:
+    build: gateway
+    ports:
+      - "8080:8080"
+    depends_on:
+      - usuarioapp
+      - ambienteapp
+      - agendamentoapp
+    networks:
+      - rede_gateway
+      - rede_usuario
+      - rede_sala
+      - rede_reserva
+
+  # Mensageria RabbitMQ
+  fila_mensagens:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - rede_mensageria
+      - rede_usuario
+      - rede_sala
+      - rede_reserva
+
+  # Interface de administração de bancos
+  paineladmin:
+    image: adminer
+    restart: always
+    ports:
+      - "8085:8080"
+    networks:
+      - rede_gateway
+      - rede_usuario
+      - rede_sala
+      - rede_reserva
+
+networks:
+  rede_gateway:
+  rede_mensageria:
+  rede_usuario:
+  rede_sala:
+  rede_reserva:
+
+volumes:
+  dados_usuario:
+  dados_sala:
+  dados_reserva:
