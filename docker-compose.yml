@@ -132,7 +132,6 @@ services:
     ports:
       - "8085:8080"
     networks:
-      - rede_gateway
       - rede_usuario
       - rede_sala
       - rede_reserva
